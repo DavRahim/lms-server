@@ -1,10 +1,14 @@
 {
   "name": "lms-server",
   "version": "1.0.0",
-  "description": "rs learing management server",
+  "description": "rs learning management server",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node-dev --respawn src/index.ts",
+    "start": "node build/server.js",
+    "build": "tsc"
   },
   "keywords": [
     "javascript",
@@ -12,5 +16,13 @@
     "lms"
   ],
   "author": "Abdur Rahim",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^20.14.8",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.2"
+  },
+  "devDependencies": {
+    "ts-node-dev": "^2.0.0"
+  }
 }
