@@ -1,5 +1,5 @@
 
-class ApiResponse {
+export class ApiResponse {
     statusCode: any
     data: any
     success: any
