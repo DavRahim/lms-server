@@ -1,4 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 const emailRegexPatten: RegExp = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 
 export interface IUser extends Document {
@@ -12,9 +14,9 @@ export interface IUser extends Document {
     role: string;
     isVerified: boolean;
     courses: Array<{ courseId: string }>;
-    comparePassword: (password: string) => Promise<boolean>;
-    SignAccessToken: () => string;
-    SignRefreshToken: () => string;
+    isPasswordCorrect: (password: string) => Promise<boolean>;
+    generateAccessToken: () => string;
+    generateRefreshToken: () => string;
 }
 
 const userSchema: Schema<IUser> = new mongoose.Schema(
@@ -60,6 +62,43 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
     { timestamps: true }
 )
 
+// Hash password before saving
+userSchema.pre<IUser>("save", async function (next) {
+
+    if (!this.isModified("password")) return next();
+
+    this.password = await bcrypt.hash(this.password, 10);
+    next()
+});
+
+// compare password
+userSchema.methods.isPasswordCorrect = async function (enterPassword: string): Promise<boolean> {
+    return await bcrypt.compare(enterPassword, this.password);
+}
+
+// jwt
+// generateAccessToken
+userSchema.methods.generateAccessToken = async function () {
+    return jwt.sign(
+        {
+            id: this._id,
+            email: this.email,
+            name: this.name
+        },
+        process.env.ACCESS_TOKEN_SECRET || "",
+        { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+    )
+}
+
+userSchema.methods.generateRefreshToken = async function () {
+    return jwt.sign(
+        {
+            id: this._id,
+        },
+        process.env.REFRESH_TOKEN_SECRET || "",
+        { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
+    )
+}
 
 
 export const userModel: Model<IUser> = mongoose.model("user", userSchema);
