@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -16,5 +16,25 @@ app.use(cookieParser())
 
 
 
+
+// routes import
+import userRouter from './routes/user.route';
+
+
+
+// routes declaration 
+app.use("/api/v1/users", userRouter)
+
+
+
+// http://localhost:8000/api/v1/users/register
+
+// testing api
+app.get("/test", (req: Request, res: Response, next: NextFunction) => {
+    res.status(200).json({
+        success: true,
+        message: "Api is working",
+    });
+});
 
 export { app }
