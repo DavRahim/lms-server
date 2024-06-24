@@ -11,6 +11,10 @@ export interface IUser extends Document {
         public_id: string;
         url: string
     };
+    gender: string;
+    phonNumber: string;
+    discordUsername: string;
+    address: string
     role: string;
     isVerified: boolean;
     courses: Array<{ courseId: string }>;
@@ -40,6 +44,21 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
             type: String,
             // required: [true, "Please enter your password"],  ->social auth not work
             minlength: [6, "Password must be at least 6 characters"],
+        },
+        gender: {
+            type: String,
+            required: [true, "Please enter your gender"],
+        },
+        phonNumber: {
+            type: String,
+            required: [true, "Please enter your phonNumber"],
+        },
+        discordUsername: {
+            type: String
+        },
+        address: {
+            type: String,
+            required: [true, "Please enter your address"],
         },
         avatar: {
             public_id: String,
