@@ -14,9 +14,10 @@ export interface IUser extends Document {
     gender: string;
     phonNumber: string;
     discordUsername: string;
-    address: string
+    address: string;
     role: string;
     isVerified: boolean;
+    refreshToken: string;
     courses: Array<{ courseId: string }>;
     isPasswordCorrect: (password: string) => Promise<boolean>;
     generateAccessToken: () => string;
@@ -72,6 +73,9 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        refreshToken: {
+            type: String
+        },
         courses: [
             {
                 courseId: String,
@@ -97,7 +101,7 @@ userSchema.methods.isPasswordCorrect = async function (enterPassword: string): P
 
 // jwt
 // generateAccessToken
-userSchema.methods.generateAccessToken = async function () {
+userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
             id: this._id,
@@ -105,19 +109,19 @@ userSchema.methods.generateAccessToken = async function () {
             name: this.name
         },
         process.env.ACCESS_TOKEN_SECRET || "",
-        { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+        { expiresIn: process.env.ACCESS_TOKEN_EXPIRY as string}
     )
 }
 
-userSchema.methods.generateRefreshToken = async function () {
+userSchema.methods.generateRefreshToken = function () {
     return jwt.sign(
         {
             id: this._id,
         },
         process.env.REFRESH_TOKEN_SECRET || "",
-        { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
+        { expiresIn: process.env.REFRESH_TOKEN_EXPIRY as string}
     )
 }
 
 
-export const userModel: Model<IUser> = mongoose.model("user", userSchema);
+export const UserModel: Model<IUser> = mongoose.model("user", userSchema);
