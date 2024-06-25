@@ -27,7 +27,7 @@ const generateAccessAndRefreshToken = async (userId: any) => {
     } catch (error) {
         throw new ApiError(500, "Something went wrong while generate refresh and access token")
     }
-}
+};
 
 
 
@@ -97,7 +97,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
     } catch (error: any) {
         throw new ApiError(500, error)
     }
-})
+});
 
 // login user
 interface ILoginRequest {
@@ -158,7 +158,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
             )
         )
 
-})
+});
 
 export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
 
@@ -185,7 +185,7 @@ export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
         .clearCookie("refreshToken", tokenOptions)
         .json(new ApiResponse(200, {}, "User logged Ou successfully!"))
 
-})
+});
 
 export const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
 
@@ -234,9 +234,120 @@ export const refreshAccessToken = asyncHandler(async (req: Request, res: Respons
         throw new ApiError(401, error || "Invalid refresh token")
     }
 
+});
+
+// change user password
+interface IUpdatePassword {
+    oldPassword: string;
+    newPassword: string;
+};
+
+export const changeCurrentPassword = asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const { oldPassword, newPassword } = req.body as IUpdatePassword;
+
+        if (!oldPassword || !newPassword) {
+            throw new ApiError(400, "Please enter your old & new password");
+        }
+
+        const user = await UserModel.findById(req.user?.id);
+        const isPasswordCorrect = await user?.isPasswordCorrect(oldPassword);
+
+        if (!isPasswordCorrect) {
+            throw new ApiError(400, "Invalid old password")
+        };
+
+        if (user) user.password = newPassword;
+
+        if (user) await user.save({ validateBeforeSave: false });
+
+        return res.status(200).json(new ApiResponse(200, {}, "Password change successfully"))
+    } catch (error) {
+        throw new ApiError(500, error || "change password error")
+    }
+
+});
+
+export const getCurrentUser = asyncHandler(async (req: Request, res: Response) => {
+    return res
+        .status(200)
+        .json(new ApiResponse(200, req.user, "current user fetched successfully"))
+});
+
+
+// update account details
+interface IUpdateUserInfo {
+    discordUsername?: string;
+    address?: string;
+};
+
+
+export const updateAccountDetails = asyncHandler(async (req: Request, res: Response) => {
+
+    try {
+        const { discordUsername, address } = req.body as IUpdateUserInfo;
+
+        if (!discordUsername || !address) {
+            throw new ApiError(400, "Minium one field are required!")
+        }
+
+        const user = await UserModel.findByIdAndUpdate(
+            req.user?.id,
+            {
+                $set: {
+                    discordUsername: discordUsername,
+                    address: address
+                }
+
+            },
+            { new: true }).select("-password")
+
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, user, "Account details update successfully"))
+    } catch (error) {
+        throw new ApiError(400, error || "update account details error")
+    }
+
+
+});
+
+export const updateUserAvatar = asyncHandler(async (req: Request, res: Response) => {
+
+    try {
+        const avatarLocalPath = req.file?.path
+
+        if (!avatarLocalPath) {
+            throw new ApiError(400, "Avatar file is missing!!")
+        }
+
+        const avatar = await uploadOnCloudinary(avatarLocalPath, 150);
+
+        if (!avatar?.public_id && avatar?.secure_url) {
+            throw new ApiError(400, "Error while uploading on avatar")
+        }
+
+        const user = await UserModel.findByIdAndUpdate(
+            req.user?.id,
+            {
+                $set: {
+                    avatar: {
+                        public_id: avatar?.public_id,
+                        url: avatar?.secure_url
+                    }
+                }
+            }, { new: true }).select("-password")
+
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, user, "avatar update successfully"))
+
+    } catch (error) {
+        throw new ApiError(400, error || "avatar update error")
+    }
+
 })
-
-
-
 
 
