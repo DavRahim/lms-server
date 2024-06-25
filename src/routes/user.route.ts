@@ -24,7 +24,7 @@ userRouter.route("/refresh-token").post(verifyJWT, refreshAccessToken)
 
 userRouter.route("/change-password").post(verifyJWT, changeCurrentPassword)
 userRouter.route("/current-user").get(verifyJWT, getCurrentUser)
-userRouter.route("/update-account").patch(verifyJWT, updateAccountDetails)
+userRouter.route("/update-user").patch(verifyJWT, updateAccountDetails)
 
 userRouter.route("/update-avatar").patch(verifyJWT, upload.single("avatar"), updateUserAvatar)
 
