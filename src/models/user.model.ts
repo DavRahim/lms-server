@@ -49,6 +49,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
         gender: {
             type: String,
             required: [true, "Please enter your gender"],
+            enum: ["male", "woman"]
         },
         phonNumber: {
             type: String,

@@ -60,7 +60,6 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
         }
 
         const avatarLocalPath = (req as MulterRequest).files?.avatar[0]?.path;
-        console.log(avatarLocalPath);
         if (!avatarLocalPath) {
             throw new ApiError(400, "avatarLocalPath file is required")
         };
@@ -91,7 +90,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
             throw new ApiError(500, "some this wrong")
         }
 
-        return res.status(201).json(
+        return res.status(200).json(
             new ApiResponse(200, createdUser, "User register successfully")
         )
     } catch (error: any) {
