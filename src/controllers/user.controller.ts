@@ -5,7 +5,10 @@ import { ApiError } from "../utils/ApiError";
 import { IUser, UserModel } from "../models/user.model";
 import { ApiResponse } from "../utils/ApiResponse";
 import { uploadOnCloudinary } from "../utils/cloudinary";
-import jwt, { JwtPayload } from "jsonwebtoken"
+import jwt, { JwtPayload, Secret } from "jsonwebtoken"
+import path from "path";
+import ejs from "ejs";
+import sendMail from "../utils/sendMail";
 
 interface MulterRequest extends Request {
     files: any;
@@ -69,8 +72,9 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
             throw new ApiError(400, "Avatar file is required")
         };
 
+        // new code
 
-        const user = await UserModel.create({
+        const user = {
             name,
             email,
             password,
@@ -82,21 +86,152 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
                 public_id: avatar.public_id,
                 url: avatar.secure_url
             }
-        })
+        }
+        const activationToken = createActivationToken(user);
+        const activationCode = activationToken.activationCode;
 
-        const createdUser = await UserModel.findById(user._id).select("-password")
+        const data = {
+            user: {
+                name: user.name,
+            },
+            activationCode,
+        };
+        const html = await ejs.renderFile(
+            path.join(__dirname, "../mails/activation-mail.ejs"),
+            data
+        );
 
-        if (!createdUser) {
-            throw new ApiError(500, "some this wrong")
+        try {
+            await sendMail({
+                email: user.email,
+                subject: "Activate your account",
+                template: "activation-mail.ejs",
+                data,
+            });
+
+            return res.status(200).json(
+                new ApiResponse(200,
+                    { activationToken: activationToken.token },
+                    `Please check your email: ${user.email} to activate your account`
+                )
+            )
+
+        } catch (error: any) {
+            throw new ApiError(500, error)
         }
 
-        return res.status(200).json(
-            new ApiResponse(200, createdUser, "User register successfully")
-        )
+        // new code end
+
+
+        // const user = await UserModel.create({
+        //     name,
+        //     email,
+        //     password,
+        //     gender,
+        //     phonNumber,
+        //     discordUsername,
+        //     address,
+        //     avatar: {
+        //         public_id: avatar.public_id,
+        //         url: avatar.secure_url
+        //     }
+        // })
+
+        // const createdUser = await UserModel.findById(user._id).select("-password")
+
+        // if (!createdUser) {
+        //     throw new ApiError(500, "some this wrong")
+        // }
+
+        // return res.status(200).json(
+        //     new ApiResponse(200, createdUser, "User register successfully")
+        // )
     } catch (error: any) {
         throw new ApiError(500, error)
     }
 });
+
+interface IActivationToken {
+    token: string;
+    activationCode: string;
+}
+
+export const createActivationToken = (user: any): IActivationToken => {
+    const activationCode = Math.floor(1000 + Math.random() * 9000).toString();
+    const token = jwt.sign(
+        {
+            user,
+            activationCode,
+        },
+        process.env.ACTIVATION_SECRET as Secret,
+        {
+            expiresIn: "5m",
+        }
+    );
+
+    return { token, activationCode };
+};
+
+interface IActivationRequest {
+    activation_token: string;
+    activation_code: string;
+}
+
+export const activateUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { activation_code, activation_token } = req.body as IActivationRequest;
+
+        const newUser: { user: IUser; activationCode: string } = jwt.verify(
+            activation_token,
+            process.env.ACTIVATION_SECRET as Secret
+        ) as { user: IUser; activationCode: string };
+
+        if (newUser.activationCode !== activation_code) {
+            throw new ApiError(400, "Invalid activation code")
+        }
+        const {
+            name,
+            email,
+            password,
+            gender,
+            phonNumber,
+            discordUsername,
+            address,
+            avatar: {
+                public_id,
+                url
+            }
+        } = newUser.user
+
+        const existUser = await UserModel.findOne({ email });
+        if (existUser) {
+            throw new ApiError(400, "Email already exit !")
+        }
+
+        const user = await UserModel.create({
+            name,
+            email,
+            password,
+            gender,
+            phonNumber,
+            discordUsername,
+            address,
+            avatar: {
+                public_id,
+                url
+            }
+        })
+        const createdUser = await UserModel.findById(user._id).select("-password")
+        return res.status(200).json(
+            new ApiResponse(200, createdUser, "User register successfully")
+        )
+    } catch (error) {
+        throw new ApiError(500, error)
+    }
+
+})
+
+
 
 // login user
 interface ILoginRequest {

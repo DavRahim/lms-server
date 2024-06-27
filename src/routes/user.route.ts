@@ -1,5 +1,5 @@
 import express from "express";
-import { changeCurrentPassword, getCurrentUser, loginUser, logoutUser, refreshAccessToken, registerUser, updateAccountDetails, updateUserAvatar } from "../controllers/user.controller";
+import { activateUser, changeCurrentPassword, getCurrentUser, loginUser, logoutUser, refreshAccessToken, registerUser, updateAccountDetails, updateUserAvatar } from "../controllers/user.controller";
 import { upload } from "../middlewares/multer.middleware";
 import { verifyJWT } from "../middlewares/auth.middleware";
 
@@ -17,6 +17,7 @@ userRouter.route("/register").post(
 )
 
 userRouter.route("/login").post(loginUser)
+userRouter.route("/active-user").post(activateUser)
 
 // secured routes
 userRouter.route("/logout").post(verifyJWT, logoutUser)
