@@ -61,8 +61,10 @@ export const registerUser = asyncHandler(async (req: Request, res: Response, nex
         if (isEmailExist) {
             throw new ApiError(409, "Email and Phone Number already exit !")
         }
+        // console.log(req);
 
-        const avatarLocalPath = (req as MulterRequest).files?.avatar[0]?.path;
+        const avatarLocalPath = req.file?.path;
+        // console.log(avatarLocalPath);
         if (!avatarLocalPath) {
             throw new ApiError(400, "avatarLocalPath file is required")
         };

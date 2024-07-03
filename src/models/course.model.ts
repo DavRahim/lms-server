@@ -109,7 +109,7 @@ const courseSchema = new Schema<ICourse>({
     },
     categories: {
         type: String,
-        required: true,
+        // required: true,
     },
     price: {
         type: Number,
