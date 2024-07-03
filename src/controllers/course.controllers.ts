@@ -42,12 +42,13 @@ export const editCourse = asyncHandler(async (req: Request, res: Response, next:
     try {
         const data = req.body;
         const thumbnail = data.thumbnail;
-        const courseId = req.params.id as string;
+        const courseId = req.params.id;
         const thumbnailPath = req.file?.path;
 
-
         const courseData = await CourseModel.findById(courseId) as any;
-        if (thumbnail && !thumbnail.startsWith("https")) {
+
+
+        if (thumbnailPath && !thumbnail?.startsWith("https")) {
             await cloudinary.v2.uploader.destroy(thumbnail.public_id);
             const thumbnails = await uploadOnCloudinary(thumbnailPath, 1080)
             courseData.thumbnail = {
@@ -56,7 +57,7 @@ export const editCourse = asyncHandler(async (req: Request, res: Response, next:
             }
         }
 
-        if (thumbnail.startsWith("https")) {
+        if (thumbnail?.startsWith("https")) {
             data.thumbnail = {
                 public_id: courseData.public_id,
                 url: courseData.url,
