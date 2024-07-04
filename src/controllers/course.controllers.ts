@@ -278,4 +278,51 @@ export const addReview = asyncHandler(async (req: Request, res: Response, next: 
 })
 
 
+// add reply in review
+interface IAddReviewData {
+    comment: string;
+    courseId: string;
+    reviewId: string;
+}
+
+export const addReplyToReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { comment, courseId, reviewId } = req.body as IAddReviewData;
+        const course = await CourseModel.findById(courseId);
+
+        if (!course) {
+            throw new ApiError(400, "course not found")
+        }
+
+        const review = course.reviews?.find(
+            (rev: any) => rev._id.toString() === reviewId
+        );
+
+        if (!review) {
+            throw new ApiError(404, "Review not found")
+        }
+
+        const replyData: any = {
+            user: req.user,
+            comment,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        if (review.commentReplies) {
+            review.commentReplies = [];
+        }
+
+        review.commentReplies?.push(replyData);
+
+        await course?.save();
+
+        return res.status(200).json(new ApiResponse(200, course, "Add Reply to review done"))
+
+
+    } catch (error) {
+        throw new ApiError(500, "Add Reply To Review error")
+    }
+})
+
 
