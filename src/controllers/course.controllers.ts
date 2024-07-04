@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary";
 import { CourseModel } from "../models/course.model";
 import { ApiResponse } from "../utils/ApiResponse";
 import cloudinary from "cloudinary";
+import mongoose from "mongoose";
 
 
 
@@ -121,3 +122,53 @@ export const getAllCourses = asyncHandler(async (req: Request, res: Response, ne
 
 })
 
+
+
+// add question in course
+
+
+interface IAddQuestionData {
+    question: string;
+    courseId: string;
+    contentId: string;
+}
+
+
+export const addQuestion = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { question, courseId, contentId }: IAddQuestionData = req.body;
+
+        const course = await CourseModel.findById(courseId);
+
+        if (!mongoose.Types.ObjectId.isValid(contentId)) {
+            throw new ApiError(400, "Invalid content id")
+        }
+
+        const courseContent = course?.courseData?.find((item: any) => item._id.equals(contentId))
+
+        if (!courseContent) {
+            throw new ApiError(400, "Invalid content id")
+        }
+
+        const newQuestion: any = {
+            user: req.user,
+            question,
+            questionReplies: [],
+        }
+
+        // add this question to our course content
+        courseContent.questions.push(newQuestion);
+
+
+        // save the update course;
+        await course?.save();
+
+        return res.status(200).json(new ApiResponse(200, course, "New question add"))
+    } catch (error) {
+        throw new ApiError(500, "Add Question error")
+    }
+
+})
+
+
+// add answer is course question;
