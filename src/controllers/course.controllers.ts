@@ -125,14 +125,11 @@ export const getAllCourses = asyncHandler(async (req: Request, res: Response, ne
 
 
 // add question in course
-
-
 interface IAddQuestionData {
     question: string;
     courseId: string;
     contentId: string;
 }
-
 
 export const addQuestion = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -159,6 +156,7 @@ export const addQuestion = asyncHandler(async (req: Request, res: Response, next
         // add this question to our course content
         courseContent.questions.push(newQuestion);
 
+        // TODO: notification add
 
         // save the update course;
         await course?.save();
@@ -172,3 +170,112 @@ export const addQuestion = asyncHandler(async (req: Request, res: Response, next
 
 
 // add answer is course question;
+interface IAddAnswerData {
+    answer: string;
+    courseId: string;
+    contentId: string;
+    questionId: string;
+}
+
+export const addAnswer = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+
+    try {
+
+        const { answer, courseId, contentId, questionId }: IAddAnswerData = req.body;
+        const course = await CourseModel.findById(courseId);
+        if (!mongoose.Types.ObjectId.isValid(contentId)) {
+            throw new ApiError(400, "Invalid content id")
+        }
+
+        const courseContent = course?.courseData?.find((item: any) =>
+            item._id.equals(contentId)
+        );
+
+        if (!courseContent) {
+            throw new ApiError(400, "Invalid content id")
+        }
+
+        const question = courseContent?.questions?.find((item: any) =>
+            item._id.equals(questionId)
+        );
+
+        if (!question) {
+            throw new ApiError(400, "Invalid question id")
+        }
+
+        //  create a new answer object
+        const newAnswer: any = {
+            user: req.user,
+            answer,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        question.questionReplies?.push(newAnswer);
+
+        // save database
+        await course?.save();
+
+        // TODO: notification add
+
+        return res.status(200).json(new ApiResponse(200, course))
+    } catch (error) {
+        throw new ApiError(500, "add answer error")
+    }
+})
+
+
+// add review in course
+interface IAddReviewData {
+    review: string;
+    courseId: string;
+    rating: number;
+    userId: string;
+}
+
+export const addReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userCorseList = req.user?.courses;
+        const courseId = req.params.id;
+
+        // check if courseId already exit in userCourse base an _id;
+        const courseExits = userCorseList?.some(
+            (course: any) => course._id.toString() === courseId.toString()
+        );
+
+
+        if (!courseExits) {
+            throw new ApiError(404, "you are not eligible to access this course")
+        }
+        const course = await CourseModel.findById(courseId);
+        const { review, rating } = req.body as IAddReviewData;
+
+        const reviewData: any = {
+            user: req.user,
+            comment: review,
+            rating,
+        };
+
+        course?.reviews.push(reviewData);
+
+        // average calculation
+        let avg = 0;
+        course?.reviews.forEach((rev) => {
+            avg += rev.rating;
+        });
+        if (course) {
+            course.rating = avg / course.reviews.length; //are example we have 2 review and 5 another and is 4 so math working like this = 9 / 2 = 4.5 rating
+        }
+
+        // save the course 
+        await course?.save();
+
+        // TODO: Notification add
+
+        return res.status(200).json(new ApiResponse(200, course, "Add review done"))
+    } catch (error) {
+        throw new ApiError(500, "Add Review Done")
+    }
+})
+
+
+
