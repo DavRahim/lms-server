@@ -127,9 +127,8 @@ export const getCourseByUser = asyncHandler(async (req: Request, res: Response, 
         const userCourseList = req.user?.courses;
         const courseId = req.params.id;
 
-
         const courseExist = userCourseList?.find(
-            (course: any) => course._id === courseId
+            (course: any) => course._id.toString() === courseId
         );
 
         if (!courseExist) {
@@ -142,11 +141,9 @@ export const getCourseByUser = asyncHandler(async (req: Request, res: Response, 
 
         return res.status(200).json(new ApiResponse(200, content))
     } catch (error) {
-        throw new ApiError(500, "Get Course by user error")
+        throw new ApiError(500, error)
     }
 })
-
-
 
 
 // add question in course
