@@ -326,3 +326,15 @@ export const addReplyToReview = asyncHandler(async (req: Request, res: Response,
 })
 
 
+// get all course --- only for admin
+export const getAdminAllCourses = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const courses = await CourseModel.find().sort({ createdAt: -1 });
+        return res.status(200).json(new ApiResponse(200, courses, "Admin all courses fetch success"))
+    } catch (error) {
+        throw new ApiError(400, "Get admin all courses error")
+    }
+})
+
+
