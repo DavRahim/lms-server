@@ -333,8 +333,27 @@ export const getAdminAllCourses = asyncHandler(async (req: Request, res: Respons
         const courses = await CourseModel.find().sort({ createdAt: -1 });
         return res.status(200).json(new ApiResponse(200, courses, "Admin all courses fetch success"))
     } catch (error) {
-        throw new ApiError(400, "Get admin all courses error")
+        throw new ApiError(500, "Get admin all courses error")
     }
 })
 
+
+// Deleted course ---> only for admin
+export const deletedCourse = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const course = await CourseModel.findById(id);
+
+        if (!course) {
+            throw new ApiError(400, "Course not found")
+        }
+
+        // course to database deleted
+        await course.deleteOne({ id });
+
+        return res.status(200).json(new ApiResponse(200, "course deleted successfully"))
+    } catch (error) {
+        throw new ApiError(500, "Deleted course error")
+    }
+})
 
