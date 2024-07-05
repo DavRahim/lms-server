@@ -103,7 +103,6 @@ export const getSingleCourse = asyncHandler(async (req: Request, res: Response, 
 
 
 // get all course ----> without purchasing
-
 export const getAllCourses = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
 
     try {
@@ -121,6 +120,32 @@ export const getAllCourses = asyncHandler(async (req: Request, res: Response, ne
     }
 
 })
+
+// get course content  ---> only for valid id
+export const getCourseByUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userCourseList = req.user?.courses;
+        const courseId = req.params.id;
+
+
+        const courseExist = userCourseList?.find(
+            (course: any) => course._id === courseId
+        );
+
+        if (!courseExist) {
+            throw new ApiError(400, "You are not eligible to access this course")
+        }
+
+        const course = await CourseModel.findById(courseId);
+
+        const content = course?.courseData;
+
+        return res.status(200).json(new ApiResponse(200, content))
+    } catch (error) {
+        throw new ApiError(500, "Get Course by user error")
+    }
+})
+
 
 
 
