@@ -26,14 +26,14 @@ app.use(cookieParser())
 // routes import
 import userRouter from './routes/user.route';
 import courseRouter from './routes/course.route';
+import orderRouter from "./routes/order.route";
 
 
 
 // routes declaration 
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/course", courseRouter)
-
-
+app.use("/api/v1/order", orderRouter)
 
 // http://localhost:8000/api/v1/users/register
 
