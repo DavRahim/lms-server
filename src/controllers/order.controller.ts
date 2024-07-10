@@ -2,12 +2,13 @@ import { NextFunction, Request, Response } from "express";
 import dotenv from "dotenv"
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/ApiError";
-import { IOrder } from "../models/order.model";
+import { IOrder, OrderModel } from "../models/order.model";
 import { UserModel } from "../models/user.model";
 import { CourseModel, ICourse } from "../models/course.model";
 import ejs from "ejs";
 import path from "path";
 import sendMail from "../utils/sendMail";
+import { ApiResponse } from "../utils/ApiResponse";
 dotenv.config({
     path: './.env'
 })
@@ -42,7 +43,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response, next
         };
 
         // check course
-        const course: ICourse | null = await CourseModel.findById(courseId);
+        const course: ICourse | any = await CourseModel.findById(courseId);
         if (!course) {
             throw new ApiError(404, "Course not found")
         }
@@ -83,10 +84,19 @@ export const createOrder = asyncHandler(async (req: Request, res: Response, next
         } catch (error: any) {
             throw new ApiError(400, "course parched email not send")
         }
-        
-        user?.courses.push(course?._id.toString());
-        
+    
+        // user db save
+        user?.courses.push(course?._id.toString())
         await user?.save();
+
+        // TODO: create notification
+
+        // course db add 1
+        course.purchased = course.purchased + 1
+        await course.save();
+
+        const order = await OrderModel.create(data);
+        res.status(201).json(new ApiResponse(201, order, "order success"))
 
     } catch (error) {
         throw new ApiError(400, "createOrder error")
