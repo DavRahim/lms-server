@@ -38,7 +38,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response, next
         const courseExistInUser = user?.courses.some(
             (course: any) => course._id.toString() === courseId
         );
-        if (courseExistInUser){
+        if (courseExistInUser) {
             throw new ApiError(400, "You Have already purchased this course")
         };
 
@@ -84,7 +84,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response, next
         } catch (error: any) {
             throw new ApiError(400, "course parched email not send")
         }
-    
+
         // user db save
         user?.courses.push(course?._id.toString())
         await user?.save();
@@ -104,3 +104,41 @@ export const createOrder = asyncHandler(async (req: Request, res: Response, next
 })
 
 
+// get all orders --- only for admin
+export const getAllOrders = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const orders = await OrderModel.find().sort({ createdAt: -1 });
+    res.status(201).json(new ApiResponse(201, orders, "Admin order fetch success"))
+})
+
+//send strip publishable key payment
+export const sendStripePublishableKey = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    res.status(200).json({
+        publishablekey: process.env.STRIPE_PUBLISHABLE_KEY
+    })
+})
+
+
+// new payment
+export const newPayment = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const myPayment = await stripe.paymentIntents.create({
+            amount: req.body.amount,
+            currency: "USD",
+            metadata: {
+                company: "E-Learning"
+            },
+            automatic_payment_methods: {
+                enabled: true
+            }
+
+        })
+
+        res.status(201).json({
+            success: true,
+            client_secret: myPayment.client_secret
+        })
+    } catch (error: any) {
+        throw new ApiError(500, "new payment error");
+
+    }
+})
