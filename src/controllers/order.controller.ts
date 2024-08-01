@@ -51,6 +51,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response, next
         // make data and save 
         const data: any = {
             courseId: course._id,
+            courseName: course.name,
             userId: user?._id,
             payment_info,
         };
@@ -96,23 +97,28 @@ export const createOrder = asyncHandler(async (req: Request, res: Response, next
         await course.save();
 
         const order = await OrderModel.create(data);
-        res.status(201).json(new ApiResponse(201, order, "order success"))
+        return res.status(201).json(new ApiResponse(201, order, "order success"))
 
     } catch (error) {
-        throw new ApiError(400, "createOrder error")
+        throw new ApiError(400, error)
     }
+})
+// get order for user
+export const getUserOrders = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const orders = await OrderModel.find({ userId: req.user?.id });
+    return res.status(200).json(new ApiResponse(200, orders, "Single user Order fetch successfully!"));
 })
 
 
 // get all orders --- only for admin
 export const getAllOrders = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const orders = await OrderModel.find().sort({ createdAt: -1 });
-    res.status(201).json(new ApiResponse(201, orders, "Admin order fetch success"))
+    return res.status(201).json(new ApiResponse(201, orders, "Admin order fetch success"))
 })
 
 //send strip publishable key payment
 export const sendStripePublishableKey = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    res.status(200).json({
+    return res.status(200).json({
         publishablekey: process.env.STRIPE_PUBLISHABLE_KEY
     })
 })
@@ -133,12 +139,11 @@ export const newPayment = asyncHandler(async (req: Request, res: Response, next:
 
         })
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
             client_secret: myPayment.client_secret
         })
     } catch (error: any) {
         throw new ApiError(500, "new payment error");
-
     }
 })
