@@ -358,7 +358,6 @@ export const refreshAccessToken = asyncHandler(async (req: Request, res: Respons
         }
 
         const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshToken(user._id)
-        console.log("add")
         return res
             .status(200)
             .cookie("accessToken", accessToken, tokenOptions)
