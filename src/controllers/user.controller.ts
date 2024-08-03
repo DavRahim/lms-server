@@ -280,7 +280,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
     const tokenOptions: ITokenOptions = {
         httpOnly: true,
         secure: true,
-        sameSite: "lax",
+        sameSite: "none",
     }
 
     return res.status(200)
@@ -315,7 +315,7 @@ export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
     const tokenOptions: ITokenOptions = {
         httpOnly: true,
         secure: true,
-        sameSite: "lax"
+        sameSite: "none"
     }
 
     return res
@@ -354,7 +354,7 @@ export const refreshAccessToken = asyncHandler(async (req: Request, res: Respons
         const tokenOptions: ITokenOptions = {
             httpOnly: true,
             secure: true,
-            sameSite: "lax"
+            sameSite: "none"
         }
 
         const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshToken(user._id)
