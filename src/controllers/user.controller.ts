@@ -244,6 +244,7 @@ interface ILoginRequest {
 interface ITokenOptions {
     httpOnly: boolean;
     secure?: boolean;
+    sameSite: "lax" | "strict" | "none" | undefined;
 }
 
 
@@ -278,7 +279,8 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
 
     const tokenOptions: ITokenOptions = {
         httpOnly: true,
-        secure: true
+        secure: true,
+        sameSite: "lax",
     }
 
     return res.status(200)
@@ -312,7 +314,8 @@ export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
 
     const tokenOptions: ITokenOptions = {
         httpOnly: true,
-        secure: true
+        secure: true,
+        sameSite: "lax"
     }
 
     return res
@@ -350,7 +353,8 @@ export const refreshAccessToken = asyncHandler(async (req: Request, res: Respons
 
         const tokenOptions: ITokenOptions = {
             httpOnly: true,
-            secure: true
+            secure: true,
+            sameSite: "lax"
         }
 
         const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshToken(user._id)
